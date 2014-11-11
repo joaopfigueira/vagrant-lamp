@@ -5,12 +5,14 @@ apt-get update > /dev/null
 
 echo "Installing Apache"
 apt-get install -y apache2 php5 libapache2-mod-php5 > /dev/null
+apt-get install -y php5-mcrypt > /dev/null
 
 echo "Configuring Apache..."
 cp -f /vagrant/provision/000-default.conf /etc/apache2/sites-available/000-default.conf
 a2enmod rewrite >/dev/null
 cp -f /vagrant/provision/servername.conf /etc/apache2/conf-available/servername.conf
 a2enconf servername > /dev/null
+php5enmod mcrypt
 service apache2 restart > /dev/null
 
 echo "Installing MySQL"
