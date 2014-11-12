@@ -13,6 +13,7 @@ a2enmod rewrite >/dev/null
 cp -f /vagrant/provision/servername.conf /etc/apache2/conf-available/servername.conf
 a2enconf servername > /dev/null
 php5enmod mcrypt
+cp -f /vagrant/provision/php.ini /etc/php5/apache2/php.ini
 service apache2 restart > /dev/null
 
 echo "Installing MySQL"
