@@ -4,14 +4,16 @@ echo "Updating ..."
 apt-get update > /dev/null
 
 echo "Installing Apache"
-apt-get install -y apache2 php5 libapache2-mod-php5 > /dev/null
-apt-get install -y php5-mcrypt > /dev/null
-
-echo "Configuring Apache..."
+apt-get install -y apache2 > /dev/null
 cp -f /vagrant/provision/000-default.conf /etc/apache2/sites-available/000-default.conf
 a2enmod rewrite >/dev/null
 cp -f /vagrant/provision/servername.conf /etc/apache2/conf-available/servername.conf
 a2enconf servername > /dev/null
+service apache2 restart > /dev/null
+
+echo "Installing PHP"
+apt-get install -y php5 libapache2-mod-php5 > /dev/null
+apt-get install -y php5-mcrypt > /dev/null
 php5enmod mcrypt
 cp -f /vagrant/provision/php.ini /etc/php5/apache2/php.ini
 service apache2 restart > /dev/null
@@ -20,7 +22,6 @@ echo "Installing MySQL"
 debconf-set-selections <<< 'mysql-server mysql-server/root_password password root'
 debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password root'
 apt-get -y install mysql-server > /dev/null
-
 apt-get install -y mysql-client php5-mysql > /dev/null
 
 echo "Installing Composer"
@@ -34,5 +35,12 @@ if [ -f /vagrant/composer.json ]; then
     echo "composer.json found, let's setup your project"
     composer --working-dir=/vagrant/ install
 fi
+
+echo "Installing PHPUnit"
+wget -q https://phar.phpunit.de/phpunit.phar 
+chmod +x phpunit.phar
+mv phpunit.phar /usr/local/bin/phpunit
+
+service apache2 restart > /dev/null
 
 echo "Done Installing stuff. Have a nice day!"
