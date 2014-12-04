@@ -13,6 +13,9 @@ service apache2 restart > /dev/null
 
 echo "Installing PHP"
 apt-get install -y php5 libapache2-mod-php5 > /dev/null
+apt-get install -y php5-curl > /dev/null
+apt-get install -y php5-gd > /dev/null
+apt-get install -y php5-sqlite > /dev/null
 apt-get install -y php5-mcrypt > /dev/null
 php5enmod mcrypt
 cp -f /vagrant/provision/php.ini /etc/php5/apache2/php.ini
