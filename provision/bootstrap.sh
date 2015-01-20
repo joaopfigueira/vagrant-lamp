@@ -44,6 +44,16 @@ wget -q https://phar.phpunit.de/phpunit.phar
 chmod +x phpunit.phar
 mv phpunit.phar /usr/local/bin/phpunit
 
+echo "Installing Node.js and npm"
+apt-get install -y nodejs > /dev/null
+ln -s /usr/bin/nodejs /usr/bin/node
+apt-get install -y npm > /dev/null
+
+echo "Installing gulp, bower and grunt"
+npm install -g gulp --silent > /dev/null
+npm install -g bower --silent > /dev/null
+npm install -g grunt-cli --silent > /dev/null
+
 service apache2 restart > /dev/null
 
 echo "Done Installing stuff. Have a nice day!"
