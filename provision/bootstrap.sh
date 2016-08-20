@@ -1,64 +1,139 @@
 #!/bin/bash
 
+USE_APACHE=true
+
+# PHP stuff
+USE_PHP=true
+USE_COMPOSER=true
+COMPOSER_AUTO=false
+USE_PHPUNIT=true
+
+# Database stuff
+USE_MYSQL=true
+USE_PHPMYADMIN=true
+DB_HOST=localhost
+DB_NAME=projectdb
+DB_USER=root
+DB_PASSWD=root
+MYSQL_IMPORT=true
+
+#Git stuff
+USE_GIT=true
+GIT_USER="Git User"
+GIT_EMAIL=user.email@domain.com
+
+USE_NODE=false
+USE_GULP=false
+USE_BOWER=false
+USE_GRUNT=false
+
 echo "Creating swap file"
-/bin/dd if=/dev/zero of=/var/swap.1 bs=1M count=1024 > /dev/null
-/sbin/mkswap /var/swap.1 > /dev/null
-/sbin/swapon /var/swap.1
+/bin/dd if=/dev/zero of=/var/swap.1 bs=1M count=1024 > /dev/null 2>&1
+/sbin/mkswap /var/swap.1 > /dev/null 2>&1
+/sbin/swapon /var/swap.1 > /dev/null 2>&1
 
 echo "Updating ..."
-apt-get update > /dev/null
+apt-get -qq update > /dev/null 2>&1
 
-echo "Installing Apache"
-apt-get install -y apache2 > /dev/null
-cp -f /vagrant/provision/000-default.conf /etc/apache2/sites-available/000-default.conf
-a2enmod rewrite >/dev/null
-cp -f /vagrant/provision/servername.conf /etc/apache2/conf-available/servername.conf
-a2enconf servername > /dev/null
-service apache2 restart > /dev/null
+if $USE_APACHE; then
+    echo "Installing Apache"
+    apt-get -qq -y install apache2 > /dev/null 2>&1
+    cp -f /vagrant/provision/000-default.conf /etc/apache2/sites-available/000-default.conf
+    a2enmod rewrite > /dev/null 2>&1
+    cp -f /vagrant/provision/servername.conf /etc/apache2/conf-available/servername.conf
+    a2enconf servername > /dev/null 2>&1
+    service apache2 restart > /dev/null 2>&1
+fi
 
-echo "Installing PHP"
-apt-get install -y php5 libapache2-mod-php5 > /dev/null
-apt-get install -y php5-curl > /dev/null
-apt-get install -y php5-gd > /dev/null
-apt-get install -y php5-sqlite > /dev/null
-apt-get install -y php5-mcrypt > /dev/null
-php5enmod mcrypt
-cp -f /vagrant/provision/php.ini /etc/php5/apache2/php.ini
-service apache2 restart > /dev/null
+if $USE_PHP; then
+    echo "Installing PHP"
+    apt-get -qq -y install php5 libapache2-mod-php5 > /dev/null 2>&1
+    apt-get -qq -y install php5-curl > /dev/null 2>&1
+    apt-get -qq -y install php5-gd > /dev/null 2>&1
+    apt-get -qq -y install php5-sqlite > /dev/null 2>&1
+    apt-get -qq -y install php5-mcrypt > /dev/null 2>&1
+    php5enmod mcrypt
+    cp -f /vagrant/provision/php.ini /etc/php5/apache2/php.ini
+fi
 
-echo "Installing MySQL"
-debconf-set-selections <<< 'mysql-server mysql-server/root_password password root'
-debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password root'
-apt-get -y install mysql-server > /dev/null
-apt-get install -y mysql-client php5-mysql > /dev/null
+if $USE_MYSQL; then
+    echo "Installing MySQL"
+    debconf-set-selections <<< "mysql-server mysql-server/root_password password $DB_PASSWD"
+    debconf-set-selections <<< "mysql-server mysql-server/root_password_again password $DB_PASSWD"
+    apt-get -qq -y install mysql-server > /dev/null 2>&1
+    apt-get -qq -y install mysql-client php5-mysql > /dev/null  2>&1
 
-echo "Installing Composer"
-curl -sS https://getcomposer.org/installer | php > /dev/null
-mv composer.phar /usr/local/bin/composer
+    echo "Creating Database"
+    mysql -uroot -p$DB_PASSWD -e "CREATE DATABASE $DB_NAME" >> /dev/null 2>&1
+    mysql -uroot -p$DB_PASSWD -e "grant all privileges on $DB_NAME.* to '$DB_USER'@'localhost' identified by '$DB_PASSWD'" > /dev/null 2>&1    
 
-echo "Installing Git"
-apt-get install -y git > /dev/null
+    if $MYSQL_IMPORT && [ -f /vagrant/provision/sql ]; then
+        echo "SQL file found. Importing Database"
+        mysql -u $DB_USER -p$DB_PASSWD $DB_NAME < /vagrant/provision/sql
+    fi
+fi
 
-if [ -f /vagrant/composer.json ]; then
+if $USE_PHPMYADMIN && $USE_APACHE; then
+    echo "Installing phpMyAdmin"
+    debconf-set-selections <<< "phpmyadmin phpmyadmin/dbconfig-install boolean true"
+    debconf-set-selections <<< "phpmyadmin phpmyadmin/app-password-confirm password $DB_PASSWD"
+    debconf-set-selections <<< "phpmyadmin phpmyadmin/mysql/admin-pass password $DB_PASSWD"
+    debconf-set-selections <<< "phpmyadmin phpmyadmin/mysql/app-pass password $DB_PASSWD"
+    debconf-set-selections <<< "phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2"
+    apt-get -qq -y install phpmyadmin > /dev/null 2>&1
+fi
+
+if $USE_COMPOSER; then
+    echo "Installing Composer"
+    curl -sS https://getcomposer.org/installer | php > /dev/null 2>&1
+    mv composer.phar /usr/local/bin/composer
+fi
+
+if $COMPOSER_AUTO && [ -f /vagrant/composer.json ]; then
     echo "composer.json found, let's setup your project"
     composer --working-dir=/vagrant/ install
 fi
 
-echo "Installing PHPUnit"
-wget -q https://phar.phpunit.de/phpunit.phar 
-chmod +x phpunit.phar
-mv phpunit.phar /usr/local/bin/phpunit
+if $USE_GIT; then
+    echo "Installing Git"
+    apt-get install -y git > /dev/null 2>&1
+    
+    echo "[user]" >> /home/vagrant/.gitconfig
+    echo "    name = $GIT_USER" >> /home/vagrant/.gitconfig
+    echo "    email = $GIT_EMAIL" >> /home/vagrant/.gitconfig
+fi
 
-echo "Installing Node.js and npm"
-apt-get install -y nodejs > /dev/null
-ln -s /usr/bin/nodejs /usr/bin/node
-apt-get install -y npm > /dev/null
+if $USE_PHPUNIT; then
+    echo "Installing PHPUnit"
+    wget -q https://phar.phpunit.de/phpunit.phar 
+    chmod +x phpunit.phar
+    mv phpunit.phar /usr/local/bin/phpunit
+fi
 
-echo "Installing gulp, bower and grunt"
-npm install -g gulp --silent > /dev/null
-npm install -g bower --silent > /dev/null
-npm install -g grunt-cli --silent > /dev/null
+if $USE_NODE; then
+    echo "Installing Node.js and npm"
+    apt-get install -y nodejs > /dev/null 2>&1
+    ln -s /usr/bin/nodejs /usr/bin/node
+    apt-get install -y npm > /dev/null 2>&1
+fi
 
-service apache2 restart > /dev/null
+if $USE_GULP && $USE_NODE; then
+    echo "Installing Gulp"
+    npm install -g gulp --silent > /dev/null 2>&1
+fi
+
+if $USE_BOWER && $USE_NODE; then
+    echo "Installing Bower"
+    npm install -g bower --silent > /dev/null 2>&1
+fi
+
+if $USE_GRUNT && $USE_NODE; then
+    echo "Installing Grunt"
+    npm install -g grunt-cli --silent > /dev/null 2>&1
+fi
+
+if $USE_APACHE; then
+    service apache2 restart > /dev/null 2>&1
+fi
 
 echo "Done Installing stuff. Have a nice day!"
