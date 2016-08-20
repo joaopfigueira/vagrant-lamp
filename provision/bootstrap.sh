@@ -1,5 +1,10 @@
 #!/bin/bash
 
+echo "Creating swap file"
+/bin/dd if=/dev/zero of=/var/swap.1 bs=1M count=1024 > /dev/null
+/sbin/mkswap /var/swap.1 > /dev/null
+/sbin/swapon /var/swap.1
+
 echo "Updating ..."
 apt-get update > /dev/null
 
