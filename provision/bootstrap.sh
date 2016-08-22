@@ -27,6 +27,8 @@ USE_GULP=false
 USE_BOWER=false
 USE_GRUNT=false
 
+USE_MAILCATCHER=false
+
 echo "Creating swap file"
 /bin/dd if=/dev/zero of=/var/swap.1 bs=1M count=1024 > /dev/null 2>&1
 /sbin/mkswap /var/swap.1 > /dev/null 2>&1
@@ -34,6 +36,8 @@ echo "Creating swap file"
 
 echo "Updating ..."
 apt-get -qq update > /dev/null 2>&1
+
+sed -i 's|\\u@\\h:\\w\\$ |\\n\\u@\\h:\\w\\n\\$ |g' /home/vagrant/.bashrc
 
 if $USE_APACHE; then
     echo "Installing Apache"
@@ -130,6 +134,23 @@ fi
 if $USE_GRUNT && $USE_NODE; then
     echo "Installing Grunt"
     npm install -g grunt-cli --silent > /dev/null 2>&1
+fi
+
+if $USE_MAILCATCHER; then
+    apt-get -qq -y install build-essential libsqlite3-dev ruby1.9.1-dev > /dev/null 2>&1
+    gem install mime-types --version "< 3" > /dev/null 2>&1
+    gem install --conservative mailcatcher > /dev/null 2>&1
+    echo 'description "Mailcatcher"' > /etc/init/mailcatcher.conf
+    echo '' >> /etc/init/mailcatcher.conf
+    echo 'start on runlevel [2345]' >> /etc/init/mailcatcher.conf
+    echo 'stop on runlevel [2345]' >> /etc/init/mailcatcher.conf
+    echo '' >> /etc/init/mailcatcher.conf
+    echo 'respawn' >> /etc/init/mailcatcher.conf
+    echo 'exec /usr/bin/env $(which mailcatcher) --foreground --http-ip=0.0.0.0' >> /etc/init/mailcatcher.conf
+    if $USE_PHP; then
+        sed -i 's|^;sendmail_path =|sendmail_path = /usr/bin/env /usr/local/catchmail|g' /etc/php5/apache2/php.ini
+    fi
+    /usr/bin/env $(which mailcatcher) --ip=0.0.0.0 > /dev/null 2>&1
 fi
 
 if $USE_APACHE; then
