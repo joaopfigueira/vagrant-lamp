@@ -5,11 +5,8 @@
 	"authors": [
 		{
 			"name": "João Paulo Figueira",
-			"email": "joao.figueira@webnation.pt",
+			"email": "jpaulogvf@gmail.com",
 			"homepage": "http://joaofigueira.eu"
 		}
-	],
-	"require-dev": {
-		"phpunit/phpunit": "4.3.*"
-	}
+	]
 }
