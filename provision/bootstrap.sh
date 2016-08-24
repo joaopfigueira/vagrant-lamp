@@ -1,5 +1,11 @@
 #!/bin/bash
 
+###
+# bootstrap.sh
+#
+# configuration variables
+###
+
 USE_APACHE=true
 
 # PHP stuff
@@ -22,12 +28,17 @@ USE_GIT=true
 GIT_USER="Git User"
 GIT_EMAIL=user.email@domain.com
 
+# Node stuff
 USE_NODE=false
 USE_GULP=false
 USE_BOWER=false
 USE_GRUNT=false
 
 USE_MAILCATCHER=false
+
+###
+# end configuration
+###
 
 echo "Creating swap file"
 /bin/dd if=/dev/zero of=/var/swap.1 bs=1M count=1024 > /dev/null 2>&1
