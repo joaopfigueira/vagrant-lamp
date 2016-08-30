@@ -159,7 +159,7 @@ if $USE_MAILCATCHER; then
     echo 'respawn' >> /etc/init/mailcatcher.conf
     echo 'exec /usr/bin/env $(which mailcatcher) --foreground --http-ip=0.0.0.0' >> /etc/init/mailcatcher.conf
     if $USE_PHP; then
-        sed -i 's|^;sendmail_path =|sendmail_path = /usr/bin/env /usr/local/catchmail|g' /etc/php5/apache2/php.ini
+        sed -i 's|^;sendmail_path =|sendmail_path = /usr/bin/env /usr/local/bin/catchmail|g' /etc/php5/apache2/php.ini
     fi
     /usr/bin/env $(which mailcatcher) --ip=0.0.0.0 > /dev/null 2>&1
 fi
