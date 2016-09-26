@@ -44,6 +44,7 @@ echo "Creating swap file"
 /bin/dd if=/dev/zero of=/var/swap.1 bs=1M count=1024 > /dev/null 2>&1
 /sbin/mkswap /var/swap.1 > /dev/null 2>&1
 /sbin/swapon /var/swap.1 > /dev/null 2>&1
+echo '/var/swap.1 none swap sw 0 0' >> /etc/fstab
 
 echo "Updating ..."
 apt-get -qq update > /dev/null 2>&1
