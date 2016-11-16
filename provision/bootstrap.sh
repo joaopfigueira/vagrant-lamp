@@ -135,7 +135,7 @@ fi
 
 if $USE_GULP && $USE_NODE; then
     echo "Installing Gulp"
-    npm install -g gulp --silent > /dev/null 2>&1
+    npm install --global gulp-cli --silent > /dev/null 2>&1
 fi
 
 if $USE_BOWER && $USE_NODE; then
