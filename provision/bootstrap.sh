@@ -140,6 +140,7 @@ fi
 if $USE_GULP && $USE_NODE; then
     echo "Installing Gulp"
     npm install --global gulp-cli --silent > /dev/null 2>&1
+    apt-get install -y libnotify-bin > /dev/null 2>&1
 fi
 
 if $USE_BOWER && $USE_NODE; then
