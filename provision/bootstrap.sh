@@ -121,6 +121,8 @@ if $USE_GIT; then
     git clone https://github.com/magicmonty/bash-git-prompt.git /home/ubuntu/.bash-git-prompt --depth=1 > /dev/null 2>&1
     echo "GIT_PROMPT_ONLY_IN_REPO=1" >> /home/ubuntu/.bashrc
     echo "source ~/.bash-git-prompt/gitprompt.sh" >> /home/ubuntu/.bashrc
+
+    apt-get install -y git-ftp > /dev/null 2>&1
 fi
 
 if $USE_PHPUNIT; then
